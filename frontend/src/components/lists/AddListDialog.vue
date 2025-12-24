@@ -1,5 +1,5 @@
 <template>
-  <q-dialog :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)">
+  <q-dialog v-model="isOpen">
     <q-card style="min-width: 350px">
       <q-card-section>
         <div class="text-h6">New List</div>
@@ -28,14 +28,9 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
-interface Props {
-  modelValue: boolean
-}
-
-const props = defineProps<Props>()
+const isOpen = defineModel<boolean>({ required: true })
 
 const emit = defineEmits<{
-  'update:modelValue': [value: boolean]
   create: [data: { title: string; isPublic: boolean }]
 }>()
 
@@ -43,15 +38,12 @@ const title = ref('')
 const isPublic = ref(false)
 
 // Reset form when dialog closes
-watch(
-  () => props.modelValue,
-  (newValue) => {
-    if (!newValue) {
-      title.value = ''
-      isPublic.value = false
-    }
-  },
-)
+watch(isOpen, (newValue) => {
+  if (!newValue) {
+    title.value = ''
+    isPublic.value = false
+  }
+})
 
 const handleCreate = () => {
   if (!title.value) return
