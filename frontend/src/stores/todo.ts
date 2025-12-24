@@ -93,13 +93,14 @@ export const useTodoStore = defineStore('todo', {
       });
       this.todos = result.items;
     },
-    async createTodo(listId: string, text: string) {
+    async createTodo(listId: string, text: string): Promise<TodoItem> {
       const record = await pb.collection('todos').create<TodoItem>({
         text,
         list: listId,
         is_completed: false,
       });
       this.todos.unshift(record);
+      return record;
     },
     async updateTodo(id: string, data: Partial<TodoItem>) {
       const record = await pb.collection('todos').update<TodoItem>(id, data);

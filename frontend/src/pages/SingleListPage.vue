@@ -184,6 +184,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useTodoStore, type TodoList, type TodoItem } from 'src/stores/todo';
 import { useAuthStore } from 'src/stores/auth';
 import { useQuasar, QInput } from 'quasar';
+import { useTodosRealtime } from 'src/composables/useTodosRealtime';
 
 const route = useRoute();
 const router = useRouter();
@@ -201,6 +202,13 @@ const todoInputRef = ref<QInput | null>(null);
 const showAddListDialog = ref(false);
 const newListTitle = ref('');
 const newListPublic = ref(false);
+
+// Computed property for the current list ID (for realtime subscription)
+const currentListId = computed(() => list.value?.id ?? null);
+
+// Enable realtime subscriptions for todos
+// This will automatically subscribe when the list changes and unsubscribe on unmount
+useTodosRealtime(currentListId, todos);
 
 const isOwner = computed(() => {
   return list.value?.user === authStore.user?.id;
@@ -240,7 +248,8 @@ const loadList = async () => {
       } else {
         list.value = fetchedList;
         await todoStore.fetchTodos(listId);
-        todos.value = todoStore.todos;
+        // Create a copy so realtime updates don't conflict with store updates
+        todos.value = [...todoStore.todos];
       }
     }
   } catch (e) {
@@ -356,8 +365,12 @@ const confirmDeleteList = (userList: TodoList) => {
 const addTodo = async () => {
   if (!newTodoText.value || !list.value) return;
   try {
-    await todoStore.createTodo(list.value.id, newTodoText.value);
-    todos.value = todoStore.todos;
+    const newTodo = await todoStore.createTodo(list.value.id, newTodoText.value);
+    // Add locally immediately for instant feedback
+    // The realtime event will also arrive, but deduplication will prevent duplicates
+    if (newTodo && !todos.value.find((t) => t.id === newTodo.id)) {
+      todos.value.unshift(newTodo);
+    }
     newTodoText.value = '';
     // Refocus the input after adding a todo
     await nextTick();
@@ -370,22 +383,39 @@ const addTodo = async () => {
 
 const toggleTodo = async (todo: TodoItem, val: boolean | null) => {
   if (val === null) return;
+  const originalValue = todo.is_completed;
   try {
+    // Update locally immediately for instant feedback
+    const todoItem = todos.value.find((t) => t.id === todo.id);
+    if (todoItem) {
+      todoItem.is_completed = val;
+    }
     await todoStore.updateTodo(todo.id, { is_completed: val });
-    todos.value = todoStore.todos;
+    // Realtime will sync the update
   } catch (error) {
     console.error(error);
     $q.notify({ type: 'negative', message: 'Failed to update todo' });
+    // Revert on error
+    const todoItem = todos.value.find((t) => t.id === todo.id);
+    if (todoItem) {
+      todoItem.is_completed = originalValue;
+    }
   }
 };
 
 const deleteTodo = async (todo: TodoItem) => {
+  // Store for potential rollback
+  const originalTodos = [...todos.value];
   try {
+    // Remove locally immediately for instant feedback
+    todos.value = todos.value.filter((t) => t.id !== todo.id);
     await todoStore.deleteTodo(todo.id);
-    todos.value = todoStore.todos;
+    // Realtime will sync the delete
   } catch (error) {
     console.error(error);
     $q.notify({ type: 'negative', message: 'Failed to delete todo' });
+    // Revert on error
+    todos.value = originalTodos;
   }
 };
 
