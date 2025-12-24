@@ -1,7 +1,7 @@
 PB_VERSION?=0.35.0
 PB_OS?=darwin
 PB_ARCH?=arm64
-POCKETBASE_URL?=http://127.0.0.1:8090
+POCKETBASE_URL?=http://localhost:9000
 FRONTEND_DEPLOY_PATH?=/var/www/todo-app
 
 .PHONY: setup dev build build-frontend lint format help
@@ -26,7 +26,7 @@ dev-backend:
 	./backend/pocketbase serve
 
 dev-frontend:
-	cd frontend && npm run dev
+	cd frontend && POCKETBASE_URL=$(POCKETBASE_URL) npm run dev
 
 build-frontend:
 	cd frontend && POCKETBASE_URL=$(POCKETBASE_URL) npm run build

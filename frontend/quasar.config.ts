@@ -105,7 +105,7 @@ export default defineConfig((ctx) => {
         '/api': {
           target: 'http://localhost:8090',
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
+          // rewrite: (path) => path.replace(/^\/api/, ''),
         },
       },
     },

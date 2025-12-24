@@ -1,6 +1,11 @@
 import { defineStore } from 'pinia';
 import { pb } from 'src/services/pocketbase';
-import type { RecordModel } from 'pocketbase';
+import { ClientResponseError, type RecordModel } from 'pocketbase';
+
+// Helper to check if error is an auto-cancelled request
+function isAutoCancelledError(error: unknown): boolean {
+  return error instanceof ClientResponseError && error.isAbort;
+}
 
 export interface TodoList extends RecordModel {
   title: string;
@@ -32,12 +37,19 @@ export const useTodoStore = defineStore('todo', {
         // Use getList instead of getFullList to avoid skipTotal parameter
         // which causes 400 error in this PocketBase version
         // Note: sort by 'created' removed as the field doesn't exist in this schema
-        const result = await pb.collection('todo_lists').getList<TodoList>(1, 500);
         // Filter to only show user's own lists (not other users' public lists)
-        const userId = pb.authStore.model?.id;
-        this.lists = result.items.filter((list) => list.user === userId);
+        const userId = pb.authStore.record?.id;
+        const items = await pb.collection('todo_lists').getFullList<TodoList>({
+          filter: pb.filter(
+            "user = {:userId}",
+            { userId },
+          )
+        });
+        this.lists = items;
       } catch (error) {
-        console.error('Error fetching lists:', error);
+        if (!isAutoCancelledError(error)) {
+          console.error('Error fetching lists:', error);
+        }
       }
     },
     async fetchList(id: string) {
@@ -45,7 +57,9 @@ export const useTodoStore = defineStore('todo', {
         const record = await pb.collection('todo_lists').getOne<TodoList>(id);
         return record;
       } catch (error) {
-        console.error('Error fetching list:', error);
+        if (!isAutoCancelledError(error)) {
+          console.error('Error fetching list:', error);
+        }
         return null;
       }
     },
@@ -61,7 +75,7 @@ export const useTodoStore = defineStore('todo', {
       const record = await pb.collection('todo_lists').create<TodoList>({
         title,
         is_public: isPublic,
-        user: pb.authStore.model?.id,
+        user: pb.authStore.record?.id,
       });
       this.lists.unshift(record);
       return record;
