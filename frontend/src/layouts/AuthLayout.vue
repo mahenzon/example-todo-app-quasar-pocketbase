@@ -17,5 +17,5 @@
 <script setup lang="ts">
 defineOptions({
   name: 'AuthLayout',
-});
+})
 </script>

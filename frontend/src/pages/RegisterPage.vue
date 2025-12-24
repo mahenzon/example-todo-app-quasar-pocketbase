@@ -49,28 +49,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useAuthStore } from 'src/stores/auth';
-import { useRouter } from 'vue-router';
-import { useQuasar } from 'quasar';
+import { ref } from 'vue'
+import { useAuthStore } from 'src/stores/auth'
+import { useRouter } from 'vue-router'
+import { useQuasar } from 'quasar'
 
-const email = ref('');
-const password = ref('');
-const passwordConfirm = ref('');
-const authStore = useAuthStore();
-const router = useRouter();
-const $q = useQuasar();
+const email = ref('')
+const password = ref('')
+const passwordConfirm = ref('')
+const authStore = useAuthStore()
+const router = useRouter()
+const $q = useQuasar()
 
 const onSubmit = async () => {
   try {
-    await authStore.register(email.value, password.value, passwordConfirm.value);
-    await router.push('/');
+    await authStore.register(email.value, password.value, passwordConfirm.value)
+    await router.push('/')
   } catch (error) {
     $q.notify({
       color: 'negative',
       message: 'Registration failed. Please try again.',
-    });
-    console.error(error);
+    })
+    console.error(error)
   }
-};
+}
 </script>

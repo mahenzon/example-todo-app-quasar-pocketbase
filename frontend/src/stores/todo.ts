@@ -1,22 +1,22 @@
-import { defineStore } from 'pinia';
-import { pb } from 'src/services/pocketbase';
-import { ClientResponseError, type RecordModel } from 'pocketbase';
+import { defineStore } from 'pinia'
+import { pb } from 'src/services/pocketbase'
+import { ClientResponseError, type RecordModel } from 'pocketbase'
 
 // Helper to check if error is an auto-cancelled request
 function isAutoCancelledError(error: unknown): boolean {
-  return error instanceof ClientResponseError && error.isAbort;
+  return error instanceof ClientResponseError && error.isAbort
 }
 
 export interface TodoList extends RecordModel {
-  title: string;
-  user: string;
-  is_public: boolean;
+  title: string
+  user: string
+  is_public: boolean
 }
 
 export interface TodoItem extends RecordModel {
-  text: string;
-  is_completed: boolean;
-  list: string;
+  text: string
+  is_completed: boolean
+  list: string
 }
 
 export const useTodoStore = defineStore('todo', {
@@ -31,36 +31,33 @@ export const useTodoStore = defineStore('todo', {
       // Fetch user's lists - PocketBase listRule handles filtering:
       // "user = @request.auth.id || is_public = true"
       // So we only need to be authenticated, no additional filter needed
-      if (!pb.authStore.isValid) return;
+      if (!pb.authStore.isValid) return
 
       try {
         // Use getList instead of getFullList to avoid skipTotal parameter
         // which causes 400 error in this PocketBase version
         // Note: sort by 'created' removed as the field doesn't exist in this schema
         // Filter to only show user's own lists (not other users' public lists)
-        const userId = pb.authStore.record?.id;
+        const userId = pb.authStore.record?.id
         const items = await pb.collection('todo_lists').getFullList<TodoList>({
-          filter: pb.filter(
-            "user = {:userId}",
-            { userId },
-          )
-        });
-        this.lists = items;
+          filter: pb.filter('user = {:userId}', { userId }),
+        })
+        this.lists = items
       } catch (error) {
         if (!isAutoCancelledError(error)) {
-          console.error('Error fetching lists:', error);
+          console.error('Error fetching lists:', error)
         }
       }
     },
     async fetchList(id: string) {
       try {
-        const record = await pb.collection('todo_lists').getOne<TodoList>(id);
-        return record;
+        const record = await pb.collection('todo_lists').getOne<TodoList>(id)
+        return record
       } catch (error) {
         if (!isAutoCancelledError(error)) {
-          console.error('Error fetching list:', error);
+          console.error('Error fetching list:', error)
         }
-        return null;
+        return null
       }
     },
     async fetchPublicLists() {
@@ -68,34 +65,34 @@ export const useTodoStore = defineStore('todo', {
       // Note: sort by 'created' removed as the field doesn't exist in this schema
       const result = await pb.collection('todo_lists').getList<TodoList>(1, 500, {
         filter: 'is_public = true',
-      });
-      this.publicLists = result.items;
+      })
+      this.publicLists = result.items
     },
     async createList(title: string, isPublic: boolean = false) {
       const record = await pb.collection('todo_lists').create<TodoList>({
         title,
         is_public: isPublic,
         user: pb.authStore.record?.id,
-      });
-      this.lists.unshift(record);
-      return record;
+      })
+      this.lists.unshift(record)
+      return record
     },
     async updateList(id: string, data: Partial<TodoList>) {
-      const record = await pb.collection('todo_lists').update<TodoList>(id, data);
-      const index = this.lists.findIndex((l) => l.id === id);
+      const record = await pb.collection('todo_lists').update<TodoList>(id, data)
+      const index = this.lists.findIndex((l) => l.id === id)
       if (index !== -1) {
-        this.lists[index] = record;
+        this.lists[index] = record
       }
       if (this.currentList?.id === id) {
-        this.currentList = record;
+        this.currentList = record
       }
     },
     async deleteList(id: string) {
-      await pb.collection('todo_lists').delete(id);
-      this.lists = this.lists.filter((l) => l.id !== id);
+      await pb.collection('todo_lists').delete(id)
+      this.lists = this.lists.filter((l) => l.id !== id)
       if (this.currentList?.id === id) {
-        this.currentList = null;
-        this.todos = [];
+        this.currentList = null
+        this.todos = []
       }
     },
     async fetchTodos(listId: string) {
@@ -104,33 +101,33 @@ export const useTodoStore = defineStore('todo', {
       // Note: sort by 'created' removed as the field doesn't exist in this schema
       const result = await pb.collection('todos').getList<TodoItem>(1, 500, {
         filter: `list = "${listId}"`,
-      });
-      this.todos = result.items;
+      })
+      this.todos = result.items
     },
     async createTodo(listId: string, text: string): Promise<TodoItem> {
       const record = await pb.collection('todos').create<TodoItem>({
         text,
         list: listId,
         is_completed: false,
-      });
-      this.todos.unshift(record);
-      return record;
+      })
+      this.todos.unshift(record)
+      return record
     },
     async updateTodo(id: string, data: Partial<TodoItem>) {
-      const record = await pb.collection('todos').update<TodoItem>(id, data);
-      const index = this.todos.findIndex((t) => t.id === id);
+      const record = await pb.collection('todos').update<TodoItem>(id, data)
+      const index = this.todos.findIndex((t) => t.id === id)
       if (index !== -1) {
-        this.todos[index] = record;
+        this.todos[index] = record
       }
     },
     async deleteTodo(id: string) {
-      await pb.collection('todos').delete(id);
-      this.todos = this.todos.filter((t) => t.id !== id);
+      await pb.collection('todos').delete(id)
+      this.todos = this.todos.filter((t) => t.id !== id)
     },
     setCurrentList(list: TodoList) {
-      this.currentList = list;
-      this.todos = [];
-      void this.fetchTodos(list.id);
+      this.currentList = list
+      this.todos = []
+      void this.fetchTodos(list.id)
     },
   },
-});
+})

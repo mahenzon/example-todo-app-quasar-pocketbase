@@ -1,12 +1,12 @@
-import { defineStore } from 'pinia';
-import { pb } from 'src/services/pocketbase';
+import { defineStore } from 'pinia'
+import { pb } from 'src/services/pocketbase'
 
 // Flag to track if auth listener is set up
-let authListenerInitialized = false;
+let authListenerInitialized = false
 
 // Promise that resolves when auth is initialized
-let initPromise: Promise<void> | null = null;
-let initResolve: (() => void) | null = null;
+let initPromise: Promise<void> | null = null
+let initResolve: (() => void) | null = null
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -18,39 +18,39 @@ export const useAuthStore = defineStore('auth', {
   },
   actions: {
     async login(email: string, pass: string) {
-      const authData = await pb.collection('users').authWithPassword(email, pass);
-      this.user = authData.record;
+      const authData = await pb.collection('users').authWithPassword(email, pass)
+      this.user = authData.record
     },
     async register(email: string, pass: string, passConfirm: string) {
       await pb.collection('users').create({
         email,
         password: pass,
         passwordConfirm: passConfirm,
-      });
+      })
       // Optional: auto login after register
-      await this.login(email, pass);
+      await this.login(email, pass)
     },
     logout() {
-      pb.authStore.clear();
-      this.user = null;
+      pb.authStore.clear()
+      this.user = null
     },
     init() {
       // Sync state with PocketBase auth store on load
-      this.user = pb.authStore.model;
-      this.isInitialized = true;
+      this.user = pb.authStore.model
+      this.isInitialized = true
 
       // Resolve the init promise if it exists
       if (initResolve) {
-        initResolve();
-        initResolve = null;
+        initResolve()
+        initResolve = null
       }
 
       // Set up listener only once
       if (!authListenerInitialized) {
-        authListenerInitialized = true;
+        authListenerInitialized = true
         pb.authStore.onChange((_token, model) => {
-          this.user = model;
-        });
+          this.user = model
+        })
       }
     },
     /**
@@ -59,17 +59,17 @@ export const useAuthStore = defineStore('auth', {
      */
     async waitForInit(): Promise<void> {
       if (this.isInitialized) {
-        return;
+        return
       }
 
       // Create promise if it doesn't exist
       if (!initPromise) {
         initPromise = new Promise<void>((resolve) => {
-          initResolve = resolve;
-        });
+          initResolve = resolve
+        })
       }
 
-      return initPromise;
+      return initPromise
     },
   },
-});
+})

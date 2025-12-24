@@ -179,101 +179,101 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, nextTick, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useTodoStore, type TodoList, type TodoItem } from 'src/stores/todo';
-import { useAuthStore } from 'src/stores/auth';
-import { useQuasar, QInput } from 'quasar';
-import { useTodosRealtime } from 'src/composables/useTodosRealtime';
+import { ref, onMounted, computed, nextTick, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useTodoStore, type TodoList, type TodoItem } from 'src/stores/todo'
+import { useAuthStore } from 'src/stores/auth'
+import { useQuasar, QInput } from 'quasar'
+import { useTodosRealtime } from 'src/composables/useTodosRealtime'
 
-const route = useRoute();
-const router = useRouter();
-const todoStore = useTodoStore();
-const authStore = useAuthStore();
-const $q = useQuasar();
+const route = useRoute()
+const router = useRouter()
+const todoStore = useTodoStore()
+const authStore = useAuthStore()
+const $q = useQuasar()
 
-const list = ref<TodoList | null>(null);
-const todos = ref<TodoItem[]>([]);
-const loading = ref(true);
-const error = ref('');
-const errorType = ref<'access_denied' | 'not_found' | 'general'>('general');
-const newTodoText = ref('');
-const todoInputRef = ref<QInput | null>(null);
-const showAddListDialog = ref(false);
-const newListTitle = ref('');
-const newListPublic = ref(false);
+const list = ref<TodoList | null>(null)
+const todos = ref<TodoItem[]>([])
+const loading = ref(true)
+const error = ref('')
+const errorType = ref<'access_denied' | 'not_found' | 'general'>('general')
+const newTodoText = ref('')
+const todoInputRef = ref<QInput | null>(null)
+const showAddListDialog = ref(false)
+const newListTitle = ref('')
+const newListPublic = ref(false)
 
 // Computed property for the current list ID (for realtime subscription)
-const currentListId = computed(() => list.value?.id ?? null);
+const currentListId = computed(() => list.value?.id ?? null)
 
 // Enable realtime subscriptions for todos
 // This will automatically subscribe when the list changes and unsubscribe on unmount
-useTodosRealtime(currentListId, todos);
+useTodosRealtime(currentListId, todos)
 
 const isOwner = computed(() => {
-  return list.value?.user === authStore.user?.id;
-});
+  return list.value?.user === authStore.user?.id
+})
 
 const loadList = async () => {
-  loading.value = true;
-  error.value = '';
-  errorType.value = 'general';
+  loading.value = true
+  error.value = ''
+  errorType.value = 'general'
 
-  const listId = route.params.id as string;
+  const listId = route.params.id as string
   if (!listId) {
-    error.value = 'Invalid list ID';
-    errorType.value = 'general';
-    loading.value = false;
-    return;
+    error.value = 'Invalid list ID'
+    errorType.value = 'general'
+    loading.value = false
+    return
   }
 
   try {
-    const fetchedList = await todoStore.fetchList(listId);
+    const fetchedList = await todoStore.fetchList(listId)
     if (!fetchedList) {
       // List not found - could be because it doesn't exist or user doesn't have access
       if (authStore.isAuthenticated) {
-        error.value = 'List not found';
-        errorType.value = 'not_found';
+        error.value = 'List not found'
+        errorType.value = 'not_found'
       } else {
-        error.value = 'List not found or access denied';
-        errorType.value = 'access_denied';
+        error.value = 'List not found or access denied'
+        errorType.value = 'access_denied'
       }
     } else {
       // Check if list is accessible: must be public OR user is the owner
-      const canAccess = fetchedList.is_public || fetchedList.user === authStore.user?.id;
+      const canAccess = fetchedList.is_public || fetchedList.user === authStore.user?.id
       if (!canAccess) {
         // Private list - user needs to login
-        error.value = 'This list is private';
-        errorType.value = 'access_denied';
+        error.value = 'This list is private'
+        errorType.value = 'access_denied'
       } else {
-        list.value = fetchedList;
-        await todoStore.fetchTodos(listId);
+        list.value = fetchedList
+        await todoStore.fetchTodos(listId)
         // Create a copy so realtime updates don't conflict with store updates
-        todos.value = [...todoStore.todos];
+        todos.value = [...todoStore.todos]
       }
     }
   } catch (e) {
-    console.error(e);
-    error.value = 'Error loading list';
-    errorType.value = 'general';
+    console.error(e)
+    error.value = 'Error loading list'
+    errorType.value = 'general'
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 onMounted(async () => {
   // Wait for auth to be fully initialized before loading the list
   // This ensures we have the correct user state from PocketBase's localStorage
-  await authStore.waitForInit();
+  await authStore.waitForInit()
 
   // Load the list
-  await loadList();
+  await loadList()
 
   // Fetch user's lists if authenticated
   if (authStore.isAuthenticated) {
-    await todoStore.fetchLists();
+    await todoStore.fetchLists()
   }
-});
+})
 
 // Watch for auth changes and fetch user's lists if authenticated
 watch(
@@ -282,63 +282,63 @@ watch(
     // Only reload if user actually changed (login/logout)
     if (user !== oldUser) {
       if (user) {
-        await todoStore.fetchLists();
+        await todoStore.fetchLists()
         // Reload the current list when user logs in to check if they now have access
-        await loadList();
+        await loadList()
       }
     }
   },
-);
+)
 
 // Watch for route changes to reload the list
 watch(
   () => route.params.id,
   async () => {
-    await loadList();
+    await loadList()
   },
-);
+)
 
 const toggleListVisibility = async (userList: TodoList) => {
   try {
-    await todoStore.updateList(userList.id, { is_public: !userList.is_public });
+    await todoStore.updateList(userList.id, { is_public: !userList.is_public })
     // Reload current list if it's the one being toggled
     if (list.value?.id === userList.id) {
-      await loadList();
+      await loadList()
     }
   } catch (error) {
-    console.error(error);
-    $q.notify({ type: 'negative', message: 'Failed to update list visibility' });
+    console.error(error)
+    $q.notify({ type: 'negative', message: 'Failed to update list visibility' })
   }
-};
+}
 
 const copyPublicLink = (userList: TodoList) => {
-  const url = `${window.location.origin}/lists/${userList.id}`;
+  const url = `${window.location.origin}/lists/${userList.id}`
   navigator.clipboard
     .writeText(url)
     .then(() => {
-      $q.notify({ type: 'positive', message: 'Link copied to clipboard' });
+      $q.notify({ type: 'positive', message: 'Link copied to clipboard' })
     })
     .catch(() => {
-      $q.notify({ type: 'negative', message: 'Failed to copy link' });
-    });
-};
+      $q.notify({ type: 'negative', message: 'Failed to copy link' })
+    })
+}
 
 const createList = async () => {
-  if (!newListTitle.value) return;
+  if (!newListTitle.value) return
   try {
-    const newList = await todoStore.createList(newListTitle.value, newListPublic.value);
-    newListTitle.value = '';
-    newListPublic.value = false;
-    showAddListDialog.value = false;
+    const newList = await todoStore.createList(newListTitle.value, newListPublic.value)
+    newListTitle.value = ''
+    newListPublic.value = false
+    showAddListDialog.value = false
     // Navigate to the new list
     if (newList) {
-      await router.push(`/lists/${newList.id}`);
+      await router.push(`/lists/${newList.id}`)
     }
   } catch (error) {
-    console.error(error);
-    $q.notify({ type: 'negative', message: 'Failed to create list' });
+    console.error(error)
+    $q.notify({ type: 'negative', message: 'Failed to create list' })
   }
-};
+}
 
 const confirmDeleteList = (userList: TodoList) => {
   $q.dialog({
@@ -349,84 +349,84 @@ const confirmDeleteList = (userList: TodoList) => {
   }).onOk(() => {
     void (async () => {
       try {
-        await todoStore.deleteList(userList.id);
+        await todoStore.deleteList(userList.id)
         // If we deleted the current list, redirect to home
         if (list.value?.id === userList.id) {
-          await router.push('/');
+          await router.push('/')
         }
       } catch (error) {
-        console.error(error);
-        $q.notify({ type: 'negative', message: 'Failed to delete list' });
+        console.error(error)
+        $q.notify({ type: 'negative', message: 'Failed to delete list' })
       }
-    })();
-  });
-};
+    })()
+  })
+}
 
 const addTodo = async () => {
-  if (!newTodoText.value || !list.value) return;
+  if (!newTodoText.value || !list.value) return
   try {
-    const newTodo = await todoStore.createTodo(list.value.id, newTodoText.value);
+    const newTodo = await todoStore.createTodo(list.value.id, newTodoText.value)
     // Add locally immediately for instant feedback
     // The realtime event will also arrive, but deduplication will prevent duplicates
     if (newTodo && !todos.value.find((t) => t.id === newTodo.id)) {
-      todos.value.unshift(newTodo);
+      todos.value.unshift(newTodo)
     }
-    newTodoText.value = '';
+    newTodoText.value = ''
     // Refocus the input after adding a todo
-    await nextTick();
-    todoInputRef.value?.focus();
+    await nextTick()
+    todoInputRef.value?.focus()
   } catch (error) {
-    console.error(error);
-    $q.notify({ type: 'negative', message: 'Failed to create todo' });
+    console.error(error)
+    $q.notify({ type: 'negative', message: 'Failed to create todo' })
   }
-};
+}
 
 const toggleTodo = async (todo: TodoItem, val: boolean | null) => {
-  if (val === null) return;
-  const originalValue = todo.is_completed;
+  if (val === null) return
+  const originalValue = todo.is_completed
   try {
     // Update locally immediately for instant feedback
-    const todoItem = todos.value.find((t) => t.id === todo.id);
+    const todoItem = todos.value.find((t) => t.id === todo.id)
     if (todoItem) {
-      todoItem.is_completed = val;
+      todoItem.is_completed = val
     }
-    await todoStore.updateTodo(todo.id, { is_completed: val });
+    await todoStore.updateTodo(todo.id, { is_completed: val })
     // Realtime will sync the update
   } catch (error) {
-    console.error(error);
-    $q.notify({ type: 'negative', message: 'Failed to update todo' });
+    console.error(error)
+    $q.notify({ type: 'negative', message: 'Failed to update todo' })
     // Revert on error
-    const todoItem = todos.value.find((t) => t.id === todo.id);
+    const todoItem = todos.value.find((t) => t.id === todo.id)
     if (todoItem) {
-      todoItem.is_completed = originalValue;
+      todoItem.is_completed = originalValue
     }
   }
-};
+}
 
 const deleteTodo = async (todo: TodoItem) => {
   // Store for potential rollback
-  const originalTodos = [...todos.value];
+  const originalTodos = [...todos.value]
   try {
     // Remove locally immediately for instant feedback
-    todos.value = todos.value.filter((t) => t.id !== todo.id);
-    await todoStore.deleteTodo(todo.id);
+    todos.value = todos.value.filter((t) => t.id !== todo.id)
+    await todoStore.deleteTodo(todo.id)
     // Realtime will sync the delete
   } catch (error) {
-    console.error(error);
-    $q.notify({ type: 'negative', message: 'Failed to delete todo' });
+    console.error(error)
+    $q.notify({ type: 'negative', message: 'Failed to delete todo' })
     // Revert on error
-    todos.value = originalTodos;
+    todos.value = originalTodos
   }
-};
+}
 
 const goToLogin = () => {
   // Store the current list ID to redirect back after login
-  const listId = route.params.id as string;
+  const listId = route.params.id as string
   void router.push({
     path: '/login',
     query: { redirect: `/lists/${listId}` },
-  });
-};
+  })
+}
 </script>
 
 <style scoped>

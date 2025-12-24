@@ -132,81 +132,81 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, nextTick } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useTodoStore, type TodoList, type TodoItem } from 'src/stores/todo';
-import { useAuthStore } from 'src/stores/auth';
-import { useQuasar, QInput } from 'quasar';
+import { ref, onMounted, watch, nextTick } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useTodoStore, type TodoList, type TodoItem } from 'src/stores/todo'
+import { useAuthStore } from 'src/stores/auth'
+import { useQuasar, QInput } from 'quasar'
 
-const route = useRoute();
-const router = useRouter();
-const todoStore = useTodoStore();
-const authStore = useAuthStore();
-const $q = useQuasar();
+const route = useRoute()
+const router = useRouter()
+const todoStore = useTodoStore()
+const authStore = useAuthStore()
+const $q = useQuasar()
 
-const showAddListDialog = ref(false);
-const newListTitle = ref('');
-const newListPublic = ref(false);
-const newTodoText = ref('');
-const todoInputRef = ref<QInput | null>(null);
+const showAddListDialog = ref(false)
+const newListTitle = ref('')
+const newListPublic = ref(false)
+const newTodoText = ref('')
+const todoInputRef = ref<QInput | null>(null)
 
 // Initialize auth store on component mount
 onMounted(() => {
-  authStore.init();
-});
+  authStore.init()
+})
 
 // Watch for auth user changes and fetch lists when user is available
 watch(
   () => authStore.user,
   async (user) => {
     if (user) {
-      await todoStore.fetchLists();
+      await todoStore.fetchLists()
 
       // Auto-select first list if user is on home page and lists exist
       if (route.path === '/' && todoStore.lists.length > 0) {
-        const firstList = todoStore.lists[0];
+        const firstList = todoStore.lists[0]
         if (firstList) {
-          await router.push(`/lists/${firstList.id}`);
+          await router.push(`/lists/${firstList.id}`)
         }
       }
     }
   },
   { immediate: true },
-);
+)
 
 const toggleListVisibility = async (list: TodoList) => {
   try {
-    await todoStore.updateList(list.id, { is_public: !list.is_public });
+    await todoStore.updateList(list.id, { is_public: !list.is_public })
   } catch (error) {
-    console.error(error);
-    $q.notify({ type: 'negative', message: 'Failed to update list visibility' });
+    console.error(error)
+    $q.notify({ type: 'negative', message: 'Failed to update list visibility' })
   }
-};
+}
 
 const copyPublicLink = (list: TodoList) => {
-  const url = `${window.location.origin}/lists/${list.id}`;
+  const url = `${window.location.origin}/lists/${list.id}`
   navigator.clipboard
     .writeText(url)
     .then(() => {
-      $q.notify({ type: 'positive', message: 'Link copied to clipboard' });
+      $q.notify({ type: 'positive', message: 'Link copied to clipboard' })
     })
     .catch(() => {
-      $q.notify({ type: 'negative', message: 'Failed to copy link' });
-    });
-};
+      $q.notify({ type: 'negative', message: 'Failed to copy link' })
+    })
+}
 
 const createList = async () => {
-  if (!newListTitle.value) return;
+  if (!newListTitle.value) return
   try {
-    await todoStore.createList(newListTitle.value, newListPublic.value);
-    newListTitle.value = '';
-    newListPublic.value = false;
-    showAddListDialog.value = false;
+    await todoStore.createList(newListTitle.value, newListPublic.value)
+    newListTitle.value = ''
+    newListPublic.value = false
+    showAddListDialog.value = false
   } catch (error) {
-    console.error(error);
-    $q.notify({ type: 'negative', message: 'Failed to create list' });
+    console.error(error)
+    $q.notify({ type: 'negative', message: 'Failed to create list' })
   }
-};
+}
 
 const confirmDeleteList = (list: TodoList) => {
   $q.dialog({
@@ -216,44 +216,44 @@ const confirmDeleteList = (list: TodoList) => {
     persistent: true,
   }).onOk(() => {
     todoStore.deleteList(list.id).catch((error) => {
-      console.error(error);
-      $q.notify({ type: 'negative', message: 'Failed to delete list' });
-    });
-  });
-};
+      console.error(error)
+      $q.notify({ type: 'negative', message: 'Failed to delete list' })
+    })
+  })
+}
 
 const addTodo = async () => {
-  if (!newTodoText.value || !todoStore.currentList) return;
+  if (!newTodoText.value || !todoStore.currentList) return
   try {
-    await todoStore.createTodo(todoStore.currentList.id, newTodoText.value);
-    newTodoText.value = '';
+    await todoStore.createTodo(todoStore.currentList.id, newTodoText.value)
+    newTodoText.value = ''
     // Refocus the input after adding a todo
-    await nextTick();
-    todoInputRef.value?.focus();
+    await nextTick()
+    todoInputRef.value?.focus()
   } catch (error) {
-    console.error(error);
-    $q.notify({ type: 'negative', message: 'Failed to create todo' });
+    console.error(error)
+    $q.notify({ type: 'negative', message: 'Failed to create todo' })
   }
-};
+}
 
 const toggleTodo = async (todo: TodoItem, val: boolean | null) => {
-  if (val === null) return;
+  if (val === null) return
   try {
-    await todoStore.updateTodo(todo.id, { is_completed: val });
+    await todoStore.updateTodo(todo.id, { is_completed: val })
   } catch (error) {
-    console.error(error);
-    $q.notify({ type: 'negative', message: 'Failed to update todo' });
+    console.error(error)
+    $q.notify({ type: 'negative', message: 'Failed to update todo' })
   }
-};
+}
 
 const deleteTodo = async (todo: TodoItem) => {
   try {
-    await todoStore.deleteTodo(todo.id);
+    await todoStore.deleteTodo(todo.id)
   } catch (error) {
-    console.error(error);
-    $q.notify({ type: 'negative', message: 'Failed to delete todo' });
+    console.error(error)
+    $q.notify({ type: 'negative', message: 'Failed to delete todo' })
   }
-};
+}
 </script>
 
 <style scoped>

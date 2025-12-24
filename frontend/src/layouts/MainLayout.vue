@@ -18,18 +18,18 @@
 </template>
 
 <script setup lang="ts">
-import { useAuthStore } from 'src/stores/auth';
-import { useRouter } from 'vue-router';
+import { useAuthStore } from 'src/stores/auth'
+import { useRouter } from 'vue-router'
 
 defineOptions({
   name: 'MainLayout',
-});
+})
 
-const authStore = useAuthStore();
-const router = useRouter();
+const authStore = useAuthStore()
+const router = useRouter()
 
 async function logout() {
-  authStore.logout();
-  await router.push('/login');
+  authStore.logout()
+  await router.push('/login')
 }
 </script>

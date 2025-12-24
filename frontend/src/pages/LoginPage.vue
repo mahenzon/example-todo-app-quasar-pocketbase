@@ -36,34 +36,34 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useAuthStore } from 'src/stores/auth';
-import { useRouter, useRoute } from 'vue-router';
-import { useQuasar } from 'quasar';
+import { ref } from 'vue'
+import { useAuthStore } from 'src/stores/auth'
+import { useRouter, useRoute } from 'vue-router'
+import { useQuasar } from 'quasar'
 
-const email = ref('');
-const password = ref('');
-const authStore = useAuthStore();
-const router = useRouter();
-const route = useRoute();
-const $q = useQuasar();
+const email = ref('')
+const password = ref('')
+const authStore = useAuthStore()
+const router = useRouter()
+const route = useRoute()
+const $q = useQuasar()
 
 const onSubmit = async () => {
   try {
-    await authStore.login(email.value, password.value);
+    await authStore.login(email.value, password.value)
     // Check if there's a redirect query parameter
-    const redirectPath = route.query.redirect as string;
+    const redirectPath = route.query.redirect as string
     if (redirectPath) {
-      await router.push(redirectPath);
+      await router.push(redirectPath)
     } else {
-      await router.push('/');
+      await router.push('/')
     }
   } catch (error) {
     $q.notify({
       color: 'negative',
       message: 'Login failed. Please check your credentials.',
-    });
-    console.error(error);
+    })
+    console.error(error)
   }
-};
+}
 </script>

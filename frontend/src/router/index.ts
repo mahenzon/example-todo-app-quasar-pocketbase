@@ -1,12 +1,12 @@
-import { defineRouter } from '#q-app/wrappers';
+import { defineRouter } from '#q-app/wrappers'
 import {
   createMemoryHistory,
   createRouter,
   createWebHashHistory,
   createWebHistory,
-} from 'vue-router';
-import routes from './routes';
-import { useAuthStore } from 'src/stores/auth';
+} from 'vue-router'
+import routes from './routes'
+import { useAuthStore } from 'src/stores/auth'
 
 /*
  * If not building with SSR mode, you can
@@ -22,7 +22,7 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     ? createMemoryHistory
     : process.env.VUE_ROUTER_MODE === 'history'
       ? createWebHistory
-      : createWebHashHistory;
+      : createWebHashHistory
 
   const Router = createRouter({
     scrollBehavior: () => ({ left: 0, top: 0 }),
@@ -32,27 +32,27 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     // quasar.conf.js -> build -> vueRouterMode
     // quasar.conf.js -> build -> publicPath
     history: createHistory(process.env.VUE_ROUTER_BASE),
-  });
+  })
 
   Router.beforeEach((to, from, next) => {
-    const authStore = useAuthStore();
+    const authStore = useAuthStore()
 
     // Initialize auth store if needed (e.g. on page refresh)
     if (!authStore.isInitialized) {
-      authStore.init();
+      authStore.init()
     }
 
     // Check if route explicitly requires authentication
-    const requiresAuth = to.matched.some((record) => record.meta.requiresAuth === true);
+    const requiresAuth = to.matched.some((record) => record.meta.requiresAuth === true)
 
     if (requiresAuth && !authStore.isAuthenticated) {
       // Redirect to login only if route explicitly requires auth
-      next({ path: '/login', query: { redirect: to.fullPath } });
+      next({ path: '/login', query: { redirect: to.fullPath } })
     } else {
       // Allow access to public routes and authenticated routes
-      next();
+      next()
     }
-  });
+  })
 
-  return Router;
-});
+  return Router
+})
