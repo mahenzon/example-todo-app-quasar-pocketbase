@@ -174,7 +174,6 @@ watch(
   { immediate: true },
 );
 
-
 const toggleListVisibility = async (list: TodoList) => {
   try {
     await todoStore.updateList(list.id, { is_public: !list.is_public });

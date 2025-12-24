@@ -13,11 +13,6 @@ setup:
 	rm backend/pocketbase.zip
 	chmod +x backend/pocketbase
 
-init-frontend:
-	# Initialize Quasar project (requires user interaction usually, but we can try to automate or just prep dir)
-	# We will use npm init quasar
-	npm init quasar@latest frontend
-
 dev:
 	# Run backend and frontend concurrently
 	# This is a simple implementation, might need a tool like concurrently or just two terminals
@@ -38,9 +33,6 @@ migrate-up:
 
 migrate-down:
 	cd backend && ./pocketbase migrate down 1
-
-migrate-down-all:
-	cd backend && echo "y" | ./pocketbase migrate down 100
 
 migrate-create:
 	@read -p "Migration name: " name; \

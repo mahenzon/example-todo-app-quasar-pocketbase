@@ -44,7 +44,7 @@ export default defineRouter(function (/* { store, ssrContext } */) {
 
     // Check if route explicitly requires authentication
     const requiresAuth = to.matched.some((record) => record.meta.requiresAuth === true);
-    
+
     if (requiresAuth && !authStore.isAuthenticated) {
       // Redirect to login only if route explicitly requires auth
       next({ path: '/login', query: { redirect: to.fullPath } });
