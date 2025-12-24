@@ -1,154 +1,69 @@
 <template>
   <q-page class="row">
     <!-- Left Sidebar: Lists -->
-    <div class="col-3 q-pa-md border-right">
-      <div class="row items-center justify-between q-mb-md">
-        <div class="text-h6">My Lists</div>
-        <q-btn round color="primary" icon="add" size="sm" @click="showAddListDialog = true" />
-      </div>
-
-      <q-list separator>
-        <q-item
-          v-for="list in todoStore.lists"
-          :key="list.id"
-          clickable
-          :active="route.path === `/lists/${list.id}`"
-          @click="router.push(`/lists/${list.id}`)"
-        >
-          <q-item-section>
-            <q-item-label>{{ list.title }}</q-item-label>
-            <q-item-label caption>
-              {{ list.is_public ? 'Public' : 'Private' }}
-            </q-item-label>
-          </q-item-section>
-          <q-item-section side>
-            <div class="row">
-              <q-btn
-                flat
-                round
-                :icon="list.is_public ? 'lock_open' : 'lock'"
-                size="sm"
-                :color="list.is_public ? 'positive' : 'grey'"
-                @click.stop="toggleListVisibility(list)"
-              >
-                <q-tooltip>{{ list.is_public ? 'Make Private' : 'Make Public' }}</q-tooltip>
-              </q-btn>
-              <q-btn
-                v-if="list.is_public"
-                flat
-                round
-                icon="share"
-                size="sm"
-                color="info"
-                @click.stop="copyPublicLink(list)"
-              >
-                <q-tooltip>Copy Public Link</q-tooltip>
-              </q-btn>
-              <q-btn
-                flat
-                round
-                icon="delete"
-                size="sm"
-                color="negative"
-                @click.stop="confirmDeleteList(list)"
-              />
-            </div>
-          </q-item-section>
-        </q-item>
-      </q-list>
-    </div>
+    <ListsSidebar
+      :lists="todoStore.lists"
+      :active-list-id="currentListId"
+      @add-list="showAddListDialog = true"
+      @select-list="navigateToList"
+      @toggle-visibility="listActions.toggleVisibility"
+      @copy-link="listActions.copyPublicLink"
+      @delete-list="listActions.confirmDelete"
+    />
 
     <!-- Right Content: Todos -->
     <div class="col-9 q-pa-md">
       <div v-if="todoStore.currentList">
         <div class="text-h5 q-mb-md">{{ todoStore.currentList.title }}</div>
 
-        <q-form @submit="addTodo" class="row q-mb-md">
-          <q-input
-            ref="todoInputRef"
-            v-model="newTodoText"
-            label="Add a new todo"
-            class="col-grow q-mr-sm"
-            outlined
-            dense
-            autocomplete="off"
-          />
-          <q-btn type="submit" color="primary" label="Add" />
-        </q-form>
+        <AddTodoForm ref="addTodoFormRef" @submit="handleAddTodo" />
 
         <q-list separator bordered>
-          <q-item v-for="todo in todoStore.todos" :key="todo.id">
-            <q-item-section side>
-              <q-checkbox
-                :model-value="todo.is_completed"
-                @update:model-value="(val) => toggleTodo(todo, val)"
-              />
-            </q-item-section>
-            <q-item-section :class="{ 'text-strike': todo.is_completed }">
-              {{ todo.text }}
-            </q-item-section>
-            <q-item-section side>
-              <q-btn
-                flat
-                round
-                icon="delete"
-                size="sm"
-                color="negative"
-                @click="deleteTodo(todo)"
-              />
-            </q-item-section>
-          </q-item>
+          <TodoItem
+            v-for="todo in todoStore.todos"
+            :key="todo.id"
+            :todo="todo"
+            @toggle="handleToggleTodo"
+            @delete="handleDeleteTodo"
+          />
         </q-list>
       </div>
       <div v-else class="flex flex-center full-height text-grey">Select a list to view todos</div>
     </div>
 
     <!-- Add List Dialog -->
-    <q-dialog v-model="showAddListDialog">
-      <q-card style="min-width: 350px">
-        <q-card-section>
-          <div class="text-h6">New List</div>
-        </q-card-section>
-
-        <q-card-section class="q-pt-none">
-          <q-input
-            dense
-            v-model="newListTitle"
-            autofocus
-            label="List Title"
-            autocomplete="off"
-            @keyup.enter="createList"
-          />
-          <q-checkbox v-model="newListPublic" label="Make Public" />
-        </q-card-section>
-
-        <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cancel" v-close-popup />
-          <q-btn flat label="Create" @click="createList" v-close-popup />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+    <AddListDialog v-model="showAddListDialog" @create="handleCreateList" />
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, nextTick } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useTodoStore, type TodoList, type TodoItem } from 'src/stores/todo'
+import { useTodoStore, type TodoItem as TodoItemType } from 'src/stores/todo'
 import { useAuthStore } from 'src/stores/auth'
-import { useQuasar, QInput } from 'quasar'
+import { useListActions } from 'src/composables/useListActions'
+import { useNotify } from 'src/composables/useNotify'
+import ListsSidebar from 'src/components/lists/ListsSidebar.vue'
+import AddListDialog from 'src/components/lists/AddListDialog.vue'
+import TodoItem from 'src/components/todos/TodoItem.vue'
+import AddTodoForm from 'src/components/todos/AddTodoForm.vue'
 
 const route = useRoute()
 const router = useRouter()
 const todoStore = useTodoStore()
 const authStore = useAuthStore()
-const $q = useQuasar()
+const listActions = useListActions()
+const notify = useNotify()
 
 const showAddListDialog = ref(false)
-const newListTitle = ref('')
-const newListPublic = ref(false)
-const newTodoText = ref('')
-const todoInputRef = ref<QInput | null>(null)
+const addTodoFormRef = ref<InstanceType<typeof AddTodoForm> | null>(null)
+
+// Computed active list ID from route
+const currentListId = computed(() => {
+  const path = route.path
+  const match = path.match(/^\/lists\/(.+)$/)
+  return match ? match[1] : undefined
+})
 
 // Initialize auth store on component mount
 onMounted(() => {
@@ -174,91 +89,44 @@ watch(
   { immediate: true },
 )
 
-const toggleListVisibility = async (list: TodoList) => {
-  try {
-    await todoStore.updateList(list.id, { is_public: !list.is_public })
-  } catch (error) {
-    console.error(error)
-    $q.notify({ type: 'negative', message: 'Failed to update list visibility' })
-  }
+const navigateToList = (listId: string) => {
+  void router.push(`/lists/${listId}`)
 }
 
-const copyPublicLink = (list: TodoList) => {
-  const resolved = router.resolve({ path: `/lists/${list.id}` })
-  const url = `${window.location.origin}/#${resolved.href}`
-  navigator.clipboard
-    .writeText(url)
-    .then(() => {
-      $q.notify({ type: 'positive', message: 'Link copied to clipboard' })
-    })
-    .catch(() => {
-      $q.notify({ type: 'negative', message: 'Failed to copy link' })
-    })
-}
-
-const createList = async () => {
-  if (!newListTitle.value) return
-  try {
-    await todoStore.createList(newListTitle.value, newListPublic.value)
-    newListTitle.value = ''
-    newListPublic.value = false
+const handleCreateList = async (data: { title: string; isPublic: boolean }) => {
+  const newList = await listActions.createList(data.title, data.isPublic)
+  if (newList) {
     showAddListDialog.value = false
-  } catch (error) {
-    console.error(error)
-    $q.notify({ type: 'negative', message: 'Failed to create list' })
   }
 }
 
-const confirmDeleteList = (list: TodoList) => {
-  $q.dialog({
-    title: 'Confirm',
-    message: 'Are you sure you want to delete this list?',
-    cancel: true,
-    persistent: true,
-  }).onOk(() => {
-    todoStore.deleteList(list.id).catch((error) => {
-      console.error(error)
-      $q.notify({ type: 'negative', message: 'Failed to delete list' })
-    })
-  })
-}
-
-const addTodo = async () => {
-  if (!newTodoText.value || !todoStore.currentList) return
+const handleAddTodo = async (text: string) => {
+  if (!todoStore.currentList) return
   try {
-    await todoStore.createTodo(todoStore.currentList.id, newTodoText.value)
-    newTodoText.value = ''
-    // Refocus the input after adding a todo
-    await nextTick()
-    todoInputRef.value?.focus()
+    await todoStore.createTodo(todoStore.currentList.id, text)
+    addTodoFormRef.value?.focus()
   } catch (error) {
     console.error(error)
-    $q.notify({ type: 'negative', message: 'Failed to create todo' })
+    notify.error('Failed to create todo')
   }
 }
 
-const toggleTodo = async (todo: TodoItem, val: boolean | null) => {
-  if (val === null) return
+const handleToggleTodo = async (data: { todo: TodoItemType; value: boolean | null }) => {
+  if (data.value === null) return
   try {
-    await todoStore.updateTodo(todo.id, { is_completed: val })
+    await todoStore.updateTodo(data.todo.id, { is_completed: data.value })
   } catch (error) {
     console.error(error)
-    $q.notify({ type: 'negative', message: 'Failed to update todo' })
+    notify.error('Failed to update todo')
   }
 }
 
-const deleteTodo = async (todo: TodoItem) => {
+const handleDeleteTodo = async (todo: TodoItemType) => {
   try {
     await todoStore.deleteTodo(todo.id)
   } catch (error) {
     console.error(error)
-    $q.notify({ type: 'negative', message: 'Failed to delete todo' })
+    notify.error('Failed to delete todo')
   }
 }
 </script>
-
-<style scoped>
-.border-right {
-  border-right: 1px solid #ddd;
-}
-</style>
