@@ -1,0 +1,23 @@
+[Unit]
+Description=PocketBase Backend Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/todo-app/backend
+ExecStart=/opt/todo-app/backend/pocketbase serve --http=127.0.0.1:8090
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/todo-app/backend
+
+[Install]
+WantedBy=multi-user.target
