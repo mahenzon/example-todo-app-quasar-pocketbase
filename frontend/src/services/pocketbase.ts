@@ -1,6 +1,6 @@
 import PocketBase from 'pocketbase';
 
-// Use localhost for dev, but this should be configurable
-const pb = new PocketBase('http://127.0.0.1:8090');
+// PocketBase URL is configurable via POCKETBASE_URL environment variable at build time
+const pb = new PocketBase(process.env.POCKETBASE_URL);
 
 export { pb };

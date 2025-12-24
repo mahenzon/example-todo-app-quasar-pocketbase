@@ -1,8 +1,9 @@
 PB_VERSION=0.35.0
 PB_OS=darwin
 PB_ARCH=arm64
+POCKETBASE_URL?=http://127.0.0.1:8090
 
-.PHONY: setup dev build
+.PHONY: setup dev build build-frontend
 
 setup:
 	mkdir -p backend
@@ -27,6 +28,9 @@ dev-backend:
 
 dev-frontend:
 	cd frontend && npm run dev
+
+build-frontend:
+	cd frontend && POCKETBASE_URL=$(POCKETBASE_URL) npm run build
 
 # Migration commands
 migrate-up:

@@ -53,7 +53,9 @@ export default defineConfig((ctx) => {
 
       // publicPath: '/',
       // analyze: true,
-      // env: {},
+      env: {
+        POCKETBASE_URL: process.env.POCKETBASE_URL || 'http://127.0.0.1:8090',
+      },
       // rawDefine: {}
       // ignorePublicFolder: true,
       // minify: false,
