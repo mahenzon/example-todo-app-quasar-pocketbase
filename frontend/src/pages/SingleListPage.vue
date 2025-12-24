@@ -312,7 +312,8 @@ const toggleListVisibility = async (userList: TodoList) => {
 }
 
 const copyPublicLink = (userList: TodoList) => {
-  const url = `${window.location.origin}/lists/${userList.id}`
+  const resolved = router.resolve({ path: `/lists/${userList.id}` })
+  const url = `${window.location.origin}${resolved.href}`
   navigator.clipboard
     .writeText(url)
     .then(() => {
