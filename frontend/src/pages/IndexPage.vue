@@ -97,6 +97,8 @@ const handleCreateList = async (data: { title: string; isPublic: boolean }) => {
   const newList = await listActions.createList(data.title, data.isPublic)
   if (newList) {
     showAddListDialog.value = false
+    // Navigate to the newly created list to focus on it
+    void router.push(`/lists/${newList.id}`)
   }
 }
 
