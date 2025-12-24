@@ -67,7 +67,6 @@ export function useListActions() {
       title: 'Confirm',
       message: 'Are you sure you want to delete this list?',
       cancel: true,
-      persistent: true,
     }).onOk(() => {
       void (async () => {
         try {
