@@ -2,7 +2,10 @@
   <q-layout view="lHh Lpr lFf">
     <q-header elevated>
       <q-toolbar>
-        <q-toolbar-title> Todo App </q-toolbar-title>
+        <q-btn flat to="/" no-caps class="text-h6">Todo App</q-btn>
+        <q-space />
+
+        <q-btn flat to="/about" label="About" />
 
         <div v-if="authStore.user">
           {{ authStore.user.email }}

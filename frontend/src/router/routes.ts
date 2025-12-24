@@ -25,6 +25,13 @@ const routes: RouteRecordRaw[] = [
       { path: 'register', component: () => import('pages/RegisterPage.vue') },
     ],
   },
+  // About page - accessible to everyone
+  {
+    path: '/about',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [{ path: '', component: () => import('pages/AboutPage.vue') }],
+    meta: { requiresAuth: false },
+  },
 
   // Always leave this as last one,
   // but you can also remove it
