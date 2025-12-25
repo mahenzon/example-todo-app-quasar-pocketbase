@@ -90,6 +90,7 @@ export const useTodoStore = defineStore('todo', {
       // Fetch todos for a list, sorted by created descending (latest first)
       const items = await pb.collection(Collections.TODOS).getFullList<TodoItem>({
         filter: `list = "${listId}"`,
+        // sort: 'is_completed,-updated',
         sort: '-created',
       })
       this.todos = items
