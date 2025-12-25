@@ -10,7 +10,7 @@ let initResolve: (() => void) | null = null
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    user: pb.authStore.model,
+    user: pb.authStore.record,
     isInitialized: false,
   }),
   getters: {
@@ -36,7 +36,7 @@ export const useAuthStore = defineStore('auth', {
     },
     init() {
       // Sync state with PocketBase auth store on load
-      this.user = pb.authStore.model
+      this.user = pb.authStore.record
       this.isInitialized = true
 
       // Resolve the init promise if it exists
@@ -48,8 +48,8 @@ export const useAuthStore = defineStore('auth', {
       // Set up listener only once
       if (!authListenerInitialized) {
         authListenerInitialized = true
-        pb.authStore.onChange((_token, model) => {
-          this.user = model
+        pb.authStore.onChange((_, record) => {
+          this.user = record
         })
       }
     },

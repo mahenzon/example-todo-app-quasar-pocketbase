@@ -29,16 +29,6 @@
         <q-item-section side>
           <div class="row">
             <q-btn
-              flat
-              round
-              :icon="list.is_public ? 'lock_open' : 'lock'"
-              size="sm"
-              :color="list.is_public ? 'positive' : 'grey'"
-              @click.stop="$emit('toggle-visibility', list)"
-            >
-              <q-tooltip>{{ list.is_public ? 'Make Private' : 'Make Public' }}</q-tooltip>
-            </q-btn>
-            <q-btn
               v-if="list.is_public"
               flat
               round
@@ -48,6 +38,16 @@
               @click.stop="$emit('copy-link', list)"
             >
               <q-tooltip>Copy Public Link</q-tooltip>
+            </q-btn>
+            <q-btn
+              flat
+              round
+              :icon="list.is_public ? 'lock_open' : 'lock'"
+              size="sm"
+              :color="list.is_public ? 'positive' : 'grey'"
+              @click.stop="$emit('toggle-visibility', list)"
+            >
+              <q-tooltip>{{ list.is_public ? 'Make Private' : 'Make Public' }}</q-tooltip>
             </q-btn>
             <q-btn
               flat

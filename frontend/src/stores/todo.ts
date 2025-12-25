@@ -22,7 +22,6 @@ export interface TodoItem extends RecordModel {
 export const useTodoStore = defineStore('todo', {
   state: () => ({
     lists: [] as TodoList[],
-    publicLists: [] as TodoList[],
     currentList: null as TodoList | null,
     todos: [] as TodoItem[],
   }),
@@ -34,13 +33,12 @@ export const useTodoStore = defineStore('todo', {
       if (!pb.authStore.isValid) return
 
       try {
-        // Use getList instead of getFullList to avoid skipTotal parameter
-        // which causes 400 error in this PocketBase version
-        // Note: sort by 'created' removed as the field doesn't exist in this schema
         // Filter to only show user's own lists (not other users' public lists)
+        // Sort by created descending (latest first)
         const userId = pb.authStore.record?.id
         const items = await pb.collection('todo_lists').getFullList<TodoList>({
           filter: pb.filter('user = {:userId}', { userId }),
+          sort: '-created',
         })
         this.lists = items
       } catch (error) {
@@ -59,14 +57,6 @@ export const useTodoStore = defineStore('todo', {
         }
         return null
       }
-    },
-    async fetchPublicLists() {
-      // Use getList instead of getFullList to avoid skipTotal parameter
-      // Note: sort by 'created' removed as the field doesn't exist in this schema
-      const result = await pb.collection('todo_lists').getList<TodoList>(1, 500, {
-        filter: 'is_public = true',
-      })
-      this.publicLists = result.items
     },
     async createList(title: string, isPublic: boolean = false) {
       const record = await pb.collection('todo_lists').create<TodoList>({
@@ -96,13 +86,12 @@ export const useTodoStore = defineStore('todo', {
       }
     },
     async fetchTodos(listId: string) {
-      // Use getList instead of getFullList to avoid skipTotal parameter
-      // PocketBase requires double quotes for string values in filters
-      // Note: sort by 'created' removed as the field doesn't exist in this schema
-      const result = await pb.collection('todos').getList<TodoItem>(1, 500, {
+      // Fetch todos for a list, sorted by created descending (latest first)
+      const items = await pb.collection('todos').getFullList<TodoItem>({
         filter: `list = "${listId}"`,
+        sort: '-created',
       })
-      this.todos = result.items
+      this.todos = items
     },
     async createTodo(listId: string, text: string): Promise<TodoItem> {
       const record = await pb.collection('todos').create<TodoItem>({
