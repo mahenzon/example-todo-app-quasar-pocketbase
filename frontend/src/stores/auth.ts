@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { pb } from 'src/services/pocketbase'
+import { Collections } from 'src/config/collections'
 
 // Flag to track if auth listener is set up
 let authListenerInitialized = false
@@ -18,11 +19,11 @@ export const useAuthStore = defineStore('auth', {
   },
   actions: {
     async login(email: string, pass: string) {
-      const authData = await pb.collection('users').authWithPassword(email, pass)
+      const authData = await pb.collection(Collections.USERS).authWithPassword(email, pass)
       this.user = authData.record
     },
     async register(email: string, pass: string, passConfirm: string) {
-      await pb.collection('users').create({
+      await pb.collection(Collections.USERS).create({
         email,
         password: pass,
         passwordConfirm: passConfirm,

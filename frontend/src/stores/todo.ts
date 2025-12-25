@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { pb } from 'src/services/pocketbase'
 import { ClientResponseError, type RecordModel } from 'pocketbase'
+import { Collections } from 'src/config/collections'
 
 // Helper to check if error is an auto-cancelled request
 function isAutoCancelledError(error: unknown): boolean {
@@ -36,7 +37,7 @@ export const useTodoStore = defineStore('todo', {
         // Filter to only show user's own lists (not other users' public lists)
         // Sort by created descending (latest first)
         const userId = pb.authStore.record?.id
-        const items = await pb.collection('todo_lists').getFullList<TodoList>({
+        const items = await pb.collection(Collections.TODO_LISTS).getFullList<TodoList>({
           filter: pb.filter('user = {:userId}', { userId }),
           sort: '-created',
         })
@@ -49,7 +50,7 @@ export const useTodoStore = defineStore('todo', {
     },
     async fetchList(id: string) {
       try {
-        const record = await pb.collection('todo_lists').getOne<TodoList>(id)
+        const record = await pb.collection(Collections.TODO_LISTS).getOne<TodoList>(id)
         return record
       } catch (error) {
         if (!isAutoCancelledError(error)) {
@@ -59,7 +60,7 @@ export const useTodoStore = defineStore('todo', {
       }
     },
     async createList(title: string, isPublic: boolean = false) {
-      const record = await pb.collection('todo_lists').create<TodoList>({
+      const record = await pb.collection(Collections.TODO_LISTS).create<TodoList>({
         title,
         is_public: isPublic,
         user: pb.authStore.record?.id,
@@ -68,7 +69,7 @@ export const useTodoStore = defineStore('todo', {
       return record
     },
     async updateList(id: string, data: Partial<TodoList>) {
-      const record = await pb.collection('todo_lists').update<TodoList>(id, data)
+      const record = await pb.collection(Collections.TODO_LISTS).update<TodoList>(id, data)
       const index = this.lists.findIndex((l) => l.id === id)
       if (index !== -1) {
         this.lists[index] = record
@@ -78,7 +79,7 @@ export const useTodoStore = defineStore('todo', {
       }
     },
     async deleteList(id: string) {
-      await pb.collection('todo_lists').delete(id)
+      await pb.collection(Collections.TODO_LISTS).delete(id)
       this.lists = this.lists.filter((l) => l.id !== id)
       if (this.currentList?.id === id) {
         this.currentList = null
@@ -87,14 +88,14 @@ export const useTodoStore = defineStore('todo', {
     },
     async fetchTodos(listId: string) {
       // Fetch todos for a list, sorted by created descending (latest first)
-      const items = await pb.collection('todos').getFullList<TodoItem>({
+      const items = await pb.collection(Collections.TODOS).getFullList<TodoItem>({
         filter: `list = "${listId}"`,
         sort: '-created',
       })
       this.todos = items
     },
     async createTodo(listId: string, text: string): Promise<TodoItem> {
-      const record = await pb.collection('todos').create<TodoItem>({
+      const record = await pb.collection(Collections.TODOS).create<TodoItem>({
         text,
         list: listId,
         is_completed: false,
@@ -103,14 +104,14 @@ export const useTodoStore = defineStore('todo', {
       return record
     },
     async updateTodo(id: string, data: Partial<TodoItem>) {
-      const record = await pb.collection('todos').update<TodoItem>(id, data)
+      const record = await pb.collection(Collections.TODOS).update<TodoItem>(id, data)
       const index = this.todos.findIndex((t) => t.id === id)
       if (index !== -1) {
         this.todos[index] = record
       }
     },
     async deleteTodo(id: string) {
-      await pb.collection('todos').delete(id)
+      await pb.collection(Collections.TODOS).delete(id)
       this.todos = this.todos.filter((t) => t.id !== id)
     },
     setCurrentList(list: TodoList) {

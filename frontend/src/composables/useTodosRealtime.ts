@@ -2,6 +2,7 @@ import { ref, onUnmounted, watch, type Ref } from 'vue'
 import { pb } from 'src/services/pocketbase'
 import type { TodoItem } from 'src/stores/todo'
 import type { RecordSubscription } from 'pocketbase'
+import { Collections } from 'src/config/collections'
 
 /**
  * Composable for managing realtime subscriptions to todos in a specific list.
@@ -55,7 +56,7 @@ export function useTodosRealtime(listId: Ref<string | null>, todos: Ref<TodoItem
     try {
       // Subscribe to all todos changes, filtered by list
       // The filter ensures we only receive events for todos in this specific list
-      await pb.collection('todos').subscribe<TodoItem>('*', handleEvent, {
+      await pb.collection(Collections.TODOS).subscribe<TodoItem>('*', handleEvent, {
         filter: `list = "${newListId}"`,
       })
       currentSubscriptionListId = newListId
@@ -70,7 +71,7 @@ export function useTodosRealtime(listId: Ref<string | null>, todos: Ref<TodoItem
   const unsubscribeAll = async () => {
     if (currentSubscriptionListId) {
       try {
-        await pb.collection('todos').unsubscribe('*')
+        await pb.collection(Collections.TODOS).unsubscribe('*')
         console.log(`[Realtime] Unsubscribed from todos for list: ${currentSubscriptionListId}`)
       } catch (error) {
         console.error('[Realtime] Failed to unsubscribe:', error)
