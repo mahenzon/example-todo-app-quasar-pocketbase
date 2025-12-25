@@ -2,7 +2,7 @@
   <q-layout view="lHh Lpr lFf">
     <q-header elevated>
       <q-toolbar>
-        <q-toolbar-title> Todo App </q-toolbar-title>
+        <q-toolbar-title>{{ t('app.title') }}</q-toolbar-title>
       </q-toolbar>
     </q-header>
 
@@ -15,7 +15,11 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
 defineOptions({
   name: 'AuthLayout',
 })
+
+const { t } = useI18n()
 </script>

@@ -1,22 +1,20 @@
 <template>
   <q-page class="q-pa-md">
     <div class="about-container">
-      <h1 class="text-h4 q-mb-md">About</h1>
+      <h1 class="text-h4 q-mb-md">{{ t('about.title') }}</h1>
 
       <q-card class="q-mb-lg">
         <q-card-section>
-          <div class="text-h6 q-mb-sm">Todo App</div>
+          <div class="text-h6 q-mb-sm">{{ t('about.appName') }}</div>
           <p class="text-body1">
-            A simple and elegant todo list application built with Quasar Framework and PocketBase.
-            Create and manage your task lists, share them publicly, and enjoy real-time updates
-            across all your devices.
+            {{ t('about.description') }}
           </p>
         </q-card-section>
       </q-card>
 
       <q-card>
         <q-card-section>
-          <div class="text-h6 q-mb-md">Links</div>
+          <div class="text-h6 q-mb-md">{{ t('about.links') }}</div>
 
           <q-list>
             <template v-for="(link, index) in links" :key="link.href">
@@ -42,6 +40,11 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
 interface AboutLink {
   href: string
   icon: string
@@ -49,38 +52,38 @@ interface AboutLink {
   caption: string
 }
 
-const links: AboutLink[] = [
+const links = computed<AboutLink[]>(() => [
   {
     href: 'https://github.com/mahenzon/example-todo-app-quasar-pocketbase',
     icon: 'code',
-    label: 'GitHub',
-    caption: 'Project source code',
+    label: t('about.github'),
+    caption: t('about.githubCaption'),
   },
   {
     href: 'https://t.me/Khorenyan',
     icon: 'send',
-    label: 'Telegram Channel',
+    label: t('about.telegram'),
     caption: '@Khorenyan',
   },
   {
     href: 'https://www.youtube.com/@SurenKhorenyan/',
     icon: 'smart_display',
-    label: 'YouTube Channel',
+    label: t('about.youtube'),
     caption: '@SurenKhorenyan',
   },
   {
     href: 'https://mahenzon.ru/',
     icon: 'home',
-    label: 'Homepage',
+    label: t('about.homepage'),
     caption: 'mahenzon.ru',
   },
   {
     href: 'https://web.mahenzon.ru/',
     icon: 'school',
-    label: 'Web Development Course',
+    label: t('about.webCourse'),
     caption: 'web.mahenzon.ru',
   },
-]
+])
 
 defineOptions({
   name: 'AboutPage',

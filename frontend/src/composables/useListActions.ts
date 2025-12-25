@@ -1,5 +1,6 @@
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
 import { useTodoStore, type TodoList } from 'src/stores/todo'
 import { useNotify } from './useNotify'
 
@@ -8,6 +9,7 @@ import { useNotify } from './useNotify'
  * Provides methods for visibility toggle, sharing, creation, and deletion.
  */
 export function useListActions() {
+  const { t } = useI18n()
   const todoStore = useTodoStore()
   const router = useRouter()
   const $q = useQuasar()
@@ -21,7 +23,7 @@ export function useListActions() {
       await todoStore.updateList(list.id, { is_public: !list.is_public })
     } catch (error) {
       console.error(error)
-      notify.error('Failed to update list visibility')
+      notify.error(t('notifications.failedToUpdateVisibility'))
     }
   }
 
@@ -34,10 +36,10 @@ export function useListActions() {
     navigator.clipboard
       .writeText(url)
       .then(() => {
-        notify.success('Link copied to clipboard')
+        notify.success(t('notifications.linkCopied'))
       })
       .catch(() => {
-        notify.error('Failed to copy link')
+        notify.error(t('notifications.failedToCopyLink'))
       })
   }
 
@@ -52,7 +54,7 @@ export function useListActions() {
       return newList
     } catch (error) {
       console.error(error)
-      notify.error('Failed to create list')
+      notify.error(t('notifications.failedToCreateList'))
       return null
     }
   }
@@ -64,8 +66,8 @@ export function useListActions() {
    */
   const confirmDelete = (list: TodoList, onDeleted?: () => void): void => {
     $q.dialog({
-      title: 'Confirm',
-      message: 'Are you sure you want to delete this list?',
+      title: t('lists.confirmDelete'),
+      message: t('lists.confirmDeleteMessage'),
       cancel: true,
     }).onOk(() => {
       void (async () => {
@@ -74,7 +76,7 @@ export function useListActions() {
           onDeleted?.()
         } catch (error) {
           console.error(error)
-          notify.error('Failed to delete list')
+          notify.error(t('notifications.failedToDeleteList'))
         }
       })()
     })

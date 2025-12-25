@@ -2,7 +2,7 @@
   <q-dialog v-model="isOpen">
     <q-card style="min-width: 350px">
       <q-card-section>
-        <div class="text-h6">New List</div>
+        <div class="text-h6">{{ t('lists.newList') }}</div>
       </q-card-section>
 
       <q-card-section class="q-pt-none">
@@ -10,16 +10,16 @@
           dense
           v-model="title"
           autofocus
-          label="List Title"
+          :label="t('lists.listTitle')"
           autocomplete="off"
           @keyup.enter="handleCreate"
         />
-        <q-checkbox v-model="isPublic" label="Make Public" />
+        <q-checkbox v-model="isPublic" :label="t('lists.makePublic')" />
       </q-card-section>
 
       <q-card-actions align="right" class="text-primary">
-        <q-btn flat label="Cancel" v-close-popup />
-        <q-btn flat label="Create" @click="handleCreate" v-close-popup />
+        <q-btn flat :label="t('actions.cancel')" v-close-popup />
+        <q-btn flat :label="t('actions.create')" @click="handleCreate" v-close-popup />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -27,7 +27,9 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const isOpen = defineModel<boolean>({ required: true })
 
 const emit = defineEmits<{

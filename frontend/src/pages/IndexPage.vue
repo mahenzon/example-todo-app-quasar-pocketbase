@@ -28,7 +28,7 @@
           />
         </q-list>
       </div>
-      <div v-else class="flex flex-center full-height text-grey">Select a list to view todos</div>
+      <div v-else class="flex flex-center full-height text-grey">{{ t('lists.selectList') }}</div>
     </div>
 
     <!-- Add List Dialog -->
@@ -38,6 +38,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useTodoStore, type TodoItem as TodoItemType } from 'src/stores/todo'
 import { useAuthStore } from 'src/stores/auth'
@@ -48,6 +49,7 @@ import AddListDialog from 'src/components/lists/AddListDialog.vue'
 import TodoItem from 'src/components/todos/TodoItem.vue'
 import AddTodoForm from 'src/components/todos/AddTodoForm.vue'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const todoStore = useTodoStore()
@@ -109,7 +111,7 @@ const handleAddTodo = async (text: string) => {
     addTodoFormRef.value?.focus()
   } catch (error) {
     console.error(error)
-    notify.error('Failed to create todo')
+    notify.error(t('notifications.failedToCreateTodo'))
   }
 }
 
@@ -119,7 +121,7 @@ const handleToggleTodo = async (data: { todo: TodoItemType; value: boolean | nul
     await todoStore.updateTodo(data.todo.id, { is_completed: data.value })
   } catch (error) {
     console.error(error)
-    notify.error('Failed to update todo')
+    notify.error(t('notifications.failedToUpdateTodo'))
   }
 }
 
@@ -128,7 +130,7 @@ const handleDeleteTodo = async (todo: TodoItemType) => {
     await todoStore.deleteTodo(todo.id)
   } catch (error) {
     console.error(error)
-    notify.error('Failed to delete todo')
+    notify.error(t('notifications.failedToDeleteTodo'))
   }
 }
 </script>

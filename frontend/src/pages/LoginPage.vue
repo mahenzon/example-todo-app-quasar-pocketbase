@@ -1,7 +1,7 @@
 <template>
   <q-card style="width: 300px">
     <q-card-section>
-      <div class="text-h6">Login</div>
+      <div class="text-h6">{{ t('auth.login') }}</div>
     </q-card-section>
 
     <q-card-section>
@@ -9,26 +9,26 @@
         <q-input
           filled
           v-model="email"
-          label="Email"
+          :label="t('auth.email')"
           type="email"
           autocomplete="off"
           lazy-rules
-          :rules="[(val) => (val && val.length > 0) || 'Please type something']"
+          :rules="[(val) => (val && val.length > 0) || t('validation.required')]"
         />
 
         <q-input
           filled
           v-model="password"
-          label="Password"
+          :label="t('auth.password')"
           type="password"
           autocomplete="off"
           lazy-rules
-          :rules="[(val) => (val && val.length > 0) || 'Please type something']"
+          :rules="[(val) => (val && val.length > 0) || t('validation.required')]"
         />
 
         <div>
-          <q-btn label="Login" type="submit" color="primary" />
-          <q-btn label="Register" to="/register" color="primary" flat class="q-ml-sm" />
+          <q-btn :label="t('auth.login')" type="submit" color="primary" />
+          <q-btn :label="t('auth.register')" to="/register" color="primary" flat class="q-ml-sm" />
         </div>
       </q-form>
     </q-card-section>
@@ -37,10 +37,12 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from 'src/stores/auth'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 
+const { t } = useI18n()
 const email = ref('')
 const password = ref('')
 const authStore = useAuthStore()
@@ -61,7 +63,7 @@ const onSubmit = async () => {
   } catch (error) {
     $q.notify({
       color: 'negative',
-      message: 'Login failed. Please check your credentials.',
+      message: t('auth.loginFailed'),
     })
     console.error(error)
   }

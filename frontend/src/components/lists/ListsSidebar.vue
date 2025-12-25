@@ -1,7 +1,7 @@
 <template>
   <div class="col-3 q-pa-md border-right">
     <div class="row items-center justify-between q-mb-md">
-      <div class="text-h6">My Lists</div>
+      <div class="text-h6">{{ t('lists.myLists') }}</div>
       <q-btn
         v-if="showAddButton"
         round
@@ -23,7 +23,7 @@
         <q-item-section>
           <q-item-label>{{ list.title }}</q-item-label>
           <q-item-label caption>
-            {{ list.is_public ? 'Public' : 'Private' }}
+            {{ list.is_public ? t('lists.public') : t('lists.private') }}
           </q-item-label>
         </q-item-section>
         <q-item-section side>
@@ -37,7 +37,7 @@
               color="info"
               @click.stop="$emit('copy-link', list)"
             >
-              <q-tooltip>Copy Public Link</q-tooltip>
+              <q-tooltip>{{ t('lists.copyLink') }}</q-tooltip>
             </q-btn>
             <q-btn
               flat
@@ -47,7 +47,9 @@
               :color="list.is_public ? 'positive' : 'grey'"
               @click.stop="$emit('toggle-visibility', list)"
             >
-              <q-tooltip>{{ list.is_public ? 'Make Private' : 'Make Public' }}</q-tooltip>
+              <q-tooltip>{{
+                list.is_public ? t('lists.makePrivate') : t('lists.makePublic')
+              }}</q-tooltip>
             </q-btn>
             <q-btn
               flat
@@ -57,7 +59,7 @@
               color="negative"
               @click.stop="$emit('delete-list', list)"
             >
-              <q-tooltip>Delete List</q-tooltip>
+              <q-tooltip>{{ t('lists.deleteList') }}</q-tooltip>
             </q-btn>
           </div>
         </q-item-section>
@@ -67,7 +69,10 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import type { TodoList } from 'src/stores/todo'
+
+const { t } = useI18n()
 
 interface Props {
   lists: TodoList[]

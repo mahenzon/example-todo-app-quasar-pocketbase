@@ -3,20 +3,23 @@
     <q-input
       ref="inputRef"
       v-model="text"
-      label="Add a new todo"
+      :label="t('todos.addTodo')"
       class="col-grow q-mr-sm"
       outlined
       dense
       autocomplete="off"
       :disable="disabled"
     />
-    <q-btn type="submit" color="primary" label="Add" :disable="disabled" />
+    <q-btn type="submit" color="primary" :label="t('todos.add')" :disable="disabled" />
   </q-form>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { QInput } from 'quasar'
+
+const { t } = useI18n()
 
 interface Props {
   disabled?: boolean

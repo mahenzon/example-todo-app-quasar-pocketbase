@@ -25,17 +25,22 @@
 
           <!-- Login prompt for unauthenticated users -->
           <div v-if="!authStore.isAuthenticated && errorType === 'access_denied'">
-            <p class="text-body2 text-grey-7 q-mb-md">Please log in to access this list</p>
-            <q-btn color="primary" label="Login" @click="goToLogin" class="q-mr-sm" />
-            <q-btn color="secondary" outline label="Register" @click="$router.push('/register')" />
+            <p class="text-body2 text-grey-7 q-mb-md">{{ t('errors.loginPrompt') }}</p>
+            <q-btn color="primary" :label="t('auth.login')" @click="goToLogin" class="q-mr-sm" />
+            <q-btn
+              color="secondary"
+              outline
+              :label="t('auth.register')"
+              @click="$router.push('/register')"
+            />
           </div>
 
           <!-- Go to My Lists button for authenticated users -->
           <div v-else-if="authStore.isAuthenticated && errorType === 'not_found'">
             <p class="text-body2 text-grey-7 q-mb-md">
-              This list doesn't exist or you don't have access to it
+              {{ t('errors.listNotFoundMessage') }}
             </p>
-            <q-btn color="primary" label="Go to My Lists" @click="$router.push('/')" />
+            <q-btn color="primary" :label="t('errors.goToMyLists')" @click="$router.push('/')" />
           </div>
         </div>
       </div>
@@ -44,7 +49,7 @@
         <div class="row items-center q-mb-md">
           <div class="text-h5">
             {{ list.title }}
-            <q-badge v-if="!isOwner" color="secondary">Public</q-badge>
+            <q-badge v-if="!isOwner" color="secondary">{{ t('publicList.badge') }}</q-badge>
           </div>
         </div>
 
@@ -63,14 +68,14 @@
         </q-list>
 
         <div v-if="todos.length === 0" class="text-grey q-mt-md text-center">
-          No todos in this list.
+          {{ t('todos.noTodos') }}
         </div>
 
         <!-- Login prompt for anonymous users -->
         <div v-if="!authStore.isAuthenticated" class="q-mt-lg text-center">
           <q-btn
             color="primary"
-            label="Login to create your own lists"
+            :label="t('publicList.loginToCreate')"
             @click="$router.push('/login')"
           />
         </div>
@@ -84,6 +89,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useTodoStore, type TodoList, type TodoItem as TodoItemType } from 'src/stores/todo'
 import { useAuthStore } from 'src/stores/auth'
@@ -95,6 +101,7 @@ import AddListDialog from 'src/components/lists/AddListDialog.vue'
 import TodoItem from 'src/components/todos/TodoItem.vue'
 import AddTodoForm from 'src/components/todos/AddTodoForm.vue'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const todoStore = useTodoStore()
@@ -129,7 +136,7 @@ const loadList = async () => {
 
   const listId = route.params.id as string
   if (!listId) {
-    error.value = 'Invalid list ID'
+    error.value = t('errors.listNotFound')
     errorType.value = 'general'
     loading.value = false
     return
@@ -139,16 +146,16 @@ const loadList = async () => {
     const fetchedList = await todoStore.fetchList(listId)
     if (!fetchedList) {
       if (authStore.isAuthenticated) {
-        error.value = 'List not found'
+        error.value = t('errors.listNotFound')
         errorType.value = 'not_found'
       } else {
-        error.value = 'List not found or access denied'
+        error.value = t('errors.accessDenied')
         errorType.value = 'access_denied'
       }
     } else {
       const canAccess = fetchedList.is_public || fetchedList.user === authStore.user?.id
       if (!canAccess) {
-        error.value = 'This list is private'
+        error.value = t('errors.accessDenied')
         errorType.value = 'access_denied'
       } else {
         list.value = fetchedList
@@ -158,7 +165,7 @@ const loadList = async () => {
     }
   } catch (e) {
     console.error(e)
-    error.value = 'Error loading list'
+    error.value = t('errors.listNotFound')
     errorType.value = 'general'
   } finally {
     loading.value = false

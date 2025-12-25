@@ -1,4 +1,5 @@
 import { nextTick, type Ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { QInput } from 'quasar'
 import { useTodoStore, type TodoItem } from 'src/stores/todo'
 import { useNotify } from './useNotify'
@@ -16,6 +17,7 @@ export function useTodoActions(
   todos: Ref<TodoItem[]>,
   inputRef?: Ref<QInput | null>,
 ) {
+  const { t } = useI18n()
   const todoStore = useTodoStore()
   const notify = useNotify()
 
@@ -44,7 +46,7 @@ export function useTodoActions(
       return newTodo
     } catch (error) {
       console.error(error)
-      notify.error('Failed to create todo')
+      notify.error(t('notifications.failedToCreateTodo'))
       return null
     }
   }
@@ -69,7 +71,7 @@ export function useTodoActions(
       // Realtime will sync the update
     } catch (error) {
       console.error(error)
-      notify.error('Failed to update todo')
+      notify.error(t('notifications.failedToUpdateTodo'))
       // Revert on error
       const todoItem = todos.value.find((t) => t.id === todo.id)
       if (todoItem) {
@@ -92,7 +94,7 @@ export function useTodoActions(
       // Realtime will sync the delete
     } catch (error) {
       console.error(error)
-      notify.error('Failed to delete todo')
+      notify.error(t('notifications.failedToDeleteTodo'))
       // Revert on error
       todos.value = originalTodos
     }
