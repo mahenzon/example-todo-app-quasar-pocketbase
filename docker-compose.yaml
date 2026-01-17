@@ -1,0 +1,12 @@
+# for local checks
+
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: build-app/nginx/Dockerfile
+    
+    volumes:
+      - ./frontend/dist/spa:/usr/share/nginx/html:ro
+    ports:
+      - "5050:80"
