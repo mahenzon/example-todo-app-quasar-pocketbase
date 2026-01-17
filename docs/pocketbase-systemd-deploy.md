@@ -89,7 +89,7 @@ sudo systemctl enable start pocketbase.service
 Check service status:
 
 ```bash
-sudo systemctl enable start pocketbase.service
+sudo systemctl status pocketbase.service
 ```
 
 Check logs:
